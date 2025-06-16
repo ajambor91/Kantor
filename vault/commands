@@ -1,0 +1,77 @@
+Zainicjalizowanie krypty przy pierwszym uruchmieniu / generowanie klucza
+vault operator init
+
+Odpieczętowanie krypty
+vault operator unseal WYGENEROWANY_KLUCZ
+
+Logowanie się głownym kluczem
+vault login token=
+
+Włączanie sekretów baz danych
+vault secrets enable database
+
+Ustawienie konfiguracji dla PostgreSQL
+vault write database/config/users-write \
+    plugin_name=postgresql-database-plugin \
+    connection_url="postgresql://{{username}}:{{password}}@users-write:5432/exchange" \
+    allowed_roles="DB_USER_EXCHANGE,DB_USER_FLYWAY" \
+    username="exampleUser" \
+    password="examplePassword" \
+    verify_connection=true \
+    password_authentication="scram-sha-256"
+
+Dodanie roli dla użytkownika aplikacji
+vault write database/roles/DB_USER_EXCHANGE \
+        db_name=users-write \
+        creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO \"{{name}}\";" \
+        default_ttl="1h" \
+        max_ttl="24h"
+
+Dodanie roli dla użytkownika FlyWay
+vault write database/roles/DB_USER_FLYWAY \
+    db_name=users-write \
+    creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; \
+    GRANT CREATE ON DATABASE exchange TO \"{{name}}\";
+    GRANT ALL PRIVILEGES ON DATABASE exchange TO \"{{name}}\"; \
+    GRANT CREATE, CONNECT ON DATABASE exchange TO \"{{name}}\"; \
+    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO \"{{name}}\"; \
+    GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO \"{{name}}\"; \
+    GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO \"{{name}}\"; \
+    GRANT CREATE ON SCHEMA public TO \"{{name}}\";" \
+    default_ttl="1h" \
+    max_ttl="24h"
+
+Dodanie konfiguracji połaczenia z MongoDB
+ vault write database/config/mongodb-dynamic-creds \
+     plugin_name=mongodb-database-plugin \
+     connection_url="mongodb://{{username}}:{{password}}@users-read:27017/admin" \
+     username="exampleuser" \
+     password="examplepassword" \
+     allowed_roles="DB_USER_READ" \
+     verify_connection=true
+
+Dodanie roli MongoDB
+vault write database/roles/DB_USER_READ \
+    db_name=mongodb-dynamic-creds \
+    creation_statements='{ "db": "users_read", "roles": [ { "role": "readWrite", "db": "users_read" } ] }' \
+    default_ttl="1h" \
+    max_ttl="24h"
+
+Włączenie autoryzacji APPROLE
+vault auth enable approle
+
+Wczytanie polityk
+vault policy write exchange_role /vault/policies.hcl
+
+Zapisanie polityki
+vault write auth/approle/role/exchange-app-role \
+    token_policies="exchange_role" \
+    token_ttl=1h \
+    token_max_ttl=24h \
+    bind_secret_id=true
+
+Odczytanie roli / role_id
+vault read auth/approle/role/exchange-app-role/role-id
+
+Zapisanie i odczytanie sekretu / secret_id
+vault write -f auth/approle/role/exchange-app-role/secret-id

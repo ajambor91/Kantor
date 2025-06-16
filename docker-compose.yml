@@ -1,0 +1,45 @@
+services:
+  users:
+    build: ./users
+    ports:
+      - "81:9090"
+    networks:
+      - exchange
+    volumes:
+      - './users/cfg/application.properties:/app/application.properties'
+  users-write:
+    build: ./users-write
+    ports:
+      - 5432:5432
+    networks:
+      - exchange
+    volumes:
+      - users-write:/var/lib/postgresql/data
+  users-read:
+    build: ./users-read
+    ports:
+      - 27017:27017
+    networks:
+      - exchange
+    volumes:
+      - users-read:/data/db
+  vault:
+    build: ./vault
+    ports:
+      - 8200:8200
+    networks:
+      - exchange
+    volumes:
+      - vault:/vault/data
+      - './vault/config.hcl:/vault/config.hcl'
+      - './vault/policies.hcl:/vault/policies.hcl'
+networks:
+  exchange:
+    driver: bridge
+volumes:
+  users-write:
+    driver: local
+  users-read:
+    driver: local
+  vault:
+    driver: local
