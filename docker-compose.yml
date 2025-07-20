@@ -33,6 +33,8 @@ services:
       - vault:/vault/data
       - './vault/config.hcl:/vault/config.hcl'
       - './vault/policies.hcl:/vault/policies.hcl'
+    cap_add:
+      - IPC_LOCK
 networks:
   exchange:
     driver: bridge

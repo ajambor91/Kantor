@@ -23,23 +23,17 @@ vault write database/config/users-write \
 Dodanie roli dla użytkownika aplikacji
 vault write database/roles/DB_USER_EXCHANGE \
         db_name=users-write \
-        creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO \"{{name}}\";" \
+        creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; GRANT app_group TO \"{{name}}\";" \
         default_ttl="1h" \
         max_ttl="24h"
 
 Dodanie roli dla użytkownika FlyWay
 vault write database/roles/DB_USER_FLYWAY \
     db_name=users-write \
-    creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; \
-    GRANT CREATE ON DATABASE exchange TO \"{{name}}\";
-    GRANT ALL PRIVILEGES ON DATABASE exchange TO \"{{name}}\"; \
-    GRANT CREATE, CONNECT ON DATABASE exchange TO \"{{name}}\"; \
-    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO \"{{name}}\"; \
-    GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO \"{{name}}\"; \
-    GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO \"{{name}}\"; \
-    GRANT CREATE ON SCHEMA public TO \"{{name}}\";" \
+    creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; GRANT flyway_group TO \"{{name}}\";" \
     default_ttl="1h" \
     max_ttl="24h"
+
 
 Dodanie konfiguracji połaczenia z MongoDB
  vault write database/config/mongodb-dynamic-creds \

@@ -1,10 +1,10 @@
-package net.bitstechworld.users.Entities;
+package net.bitstechworld.users.Infrastructure.Entities;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import net.bitstechworld.users.DTO.UserLoginRequest;
+import net.bitstechworld.users.Domain.User;
 
 import java.time.LocalDateTime;
 
@@ -13,20 +13,17 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     @Column(name = "email", nullable = false)
-    private String name;
+    private String email;
 
     @Column(name = "password", nullable = false)
     private String password;
-
-    @Column(name = "salt", nullable = false)
-    private String salt;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -37,11 +34,28 @@ public class User {
     @Column(name = "deleted_at", nullable = true)
     private LocalDateTime deletedAt;
 
-    @Transient
-    private char[] rawPassword;
-
-    public User(UserLoginRequest userLoginRequest) {
-        this.name = userLoginRequest.name();
-        this.rawPassword = userLoginRequest.rawPassword();
+    public UserEntity(String email, String password) {
+        this.email = email;
+        this.password = password;
     }
+
+    public static UserEntity fromDomain(User user) {
+        return new UserEntity(user.getEmail(), user.getPassword());
+    }
+
+    @PrePersist
+    public void prePersist() {
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+
+
+
 }

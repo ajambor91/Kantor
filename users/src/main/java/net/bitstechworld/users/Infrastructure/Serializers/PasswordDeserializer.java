@@ -1,4 +1,4 @@
-package net.bitstechworld.users.Serializers;
+package net.bitstechworld.users.Infrastructure.Serializers;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
